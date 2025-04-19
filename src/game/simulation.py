@@ -1,10 +1,11 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 
-from .action import Action
-from .agent import Agent
-from .environment import Environment
-from .state import State
+from src.interfaces.action import Action
+from src.interfaces.agent import Agent
+from src.interfaces.environment import Environment
+from src.interfaces.render_engine import RenderEngine
+from src.interfaces.state import State
 
 
 @dataclass
@@ -16,6 +17,7 @@ class Simulation(ABC):
 
     agents: list[Agent]
     env: Environment
+    render_engine: RenderEngine
 
     def start(self, init_state: State):
         """
@@ -24,7 +26,7 @@ class Simulation(ABC):
         allow the agent to decide when it will sense and act.
         """
         self.env.state = init_state
-        self.env.state.display()
+        self.render_engine.display(self.env.state)
 
         while not self.is_complete():
             agents_actions: list[tuple[Agent, Action]] = []
@@ -38,7 +40,7 @@ class Simulation(ABC):
             for agent, action in agents_actions:
                 self.env.state = self.env.update_state(agent, action)
 
-            self.env.state.display()
+            self.render_engine.display(self.env.state)
 
     @abstractmethod
     def is_complete(self) -> bool:

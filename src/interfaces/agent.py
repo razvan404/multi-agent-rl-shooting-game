@@ -1,10 +1,12 @@
 from abc import ABC, abstractmethod
 
+from pydantic import BaseModel
+
 from .action import Action
 from .percept import Percept
 
 
-class Agent(ABC):
+class Agent(BaseModel, ABC):
     """
     An abstract software agent class. The agent must be managed by the Simulation
     class

@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
-from dataclasses import dataclass
+
+from pydantic import BaseModel
 
 from .action import Action
 from .agent import Agent
@@ -7,8 +8,7 @@ from .percept import Percept
 from .state import State
 
 
-@dataclass
-class Environment(ABC):
+class Environment(BaseModel, ABC):
     """
     This can be used for either single or multi-agent environments.
     """
@@ -23,6 +23,7 @@ class Environment(ABC):
         """
         pass
 
+    @abstractmethod
     def update_state(self, agent: Agent, action: Action) -> State:
         """
         Executes an agent's action and update the environment's state. This
