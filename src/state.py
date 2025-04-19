@@ -1,4 +1,6 @@
-from .agents.player_agent import PlayerAgent, Ray
+from pydantic import BaseModel
+
+from .agents.player import PlayerAgent, Ray
 from .constants import (
     PLAYER_VIEW_FOV,
     PLAYER_NUM_RAYS,
@@ -8,17 +10,26 @@ from .constants import (
 from .geometry import Vector2D
 from .interfaces import State
 from .map import GameMap, PlayerID, PlayerMapData
-from .objects import GameObject, game_object_size
+from .objects import GameObject, CollisionDetector
+
+
+class AgentStats(BaseModel):
+    is_alive: bool = True
+    shooting_delay: int = 0  # ticks
 
 
 class GameState(State):
     tick: int = 0
     agents: dict[PlayerID, PlayerAgent]
     map: GameMap
+    agent_stats: dict[PlayerID, AgentStats] = {}
     rays: dict[PlayerID, list[Ray]] = {}
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
+        self.agent_stats = {
+            player_id: AgentStats() for player_id in self.map.players.keys()
+        }
         self.rays = {
             player_id: self._compute_rays_for_agent(player_id, player_data)
             for player_id, player_data in self.map.players.items()
@@ -61,34 +72,26 @@ class GameState(State):
     def _check_collision(
         self, point: Vector2D, player_data: PlayerMapData
     ) -> GameObject:
-        for wall in self.map.walls:
-            if self._check_collision_point_cell(point, wall, GameObject.WALL):
+        for wall in self.map.nearest_walls(point):
+            if CollisionDetector.check_collision_point_wall(point, wall):
                 return GameObject.WALL
 
         for other_id, other_data in self.map.players.items():
             if other_id == player_data.player_id:
                 continue
-            other_obj_type = (
-                GameObject.TEAMMATE
-                if other_data.team == player_data.team
-                else GameObject.ENEMY
-            )
-            if self._check_collision_point_cell(
-                point, other_data.position, other_obj_type
+            if CollisionDetector.check_collision_point_player(
+                point, other_data.position
             ):
-                return other_obj_type
+                return (
+                    GameObject.TEAMMATE
+                    if other_data.team == player_data.team
+                    else GameObject.ENEMY
+                )
 
         return GameObject.NONE
 
-    @classmethod
-    def _check_collision_point_cell(
-        cls, point: Vector2D, cell: Vector2D, obj: GameObject
-    ) -> bool:
-        size = game_object_size(obj)
-        return (
-            cell.x - size / 2 <= point.x <= cell.x + size / 2
-            and cell.y - size / 2 <= point.y <= cell.y + size / 2
-        )
-
-    def agent_map_data(self, agent_id: str) -> PlayerMapData:
-        return self.map.players[agent_id]
+    def agent_data(self, agent_id: str) -> dict:
+        return {
+            **self.map.players[agent_id].model_dump(),
+            **self.agent_stats[agent_id].model_dump(),
+        }

@@ -1,19 +1,16 @@
 from abc import ABC
 from collections import deque
 
-from src.map import PlayerMapData
 from src.actions import PlayerAction, WaitAction
 from src.constants import PLAYER_LAST_ACTIONS_LEN
-from src.interfaces import Action, Agent
+from src.interfaces import Agent
 
 from .percept import PlayerPercept
 
 
 class PlayerAgent(Agent, ABC):
     player_id: str
-    shooting_delay: int = 0  # ticks
-    is_alive: bool = True
-    last_actions: deque[Action] = deque(maxlen=PLAYER_LAST_ACTIONS_LEN)
+    last_actions: deque[PlayerAction] = deque(maxlen=PLAYER_LAST_ACTIONS_LEN)
     current_percept: PlayerPercept | None = None
 
     def init(self, **kwargs):

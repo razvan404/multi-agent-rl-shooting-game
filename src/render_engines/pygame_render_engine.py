@@ -1,7 +1,10 @@
+import time
+
 import pygame
 import math
 
 from src.interfaces.render_engine import RenderEngine
+from src.render_engines.exceptions import StopSimulationException
 from src.state import GameState
 from src.constants import PLAYER_VIEW_FOV, PLAYER_NUM_RAYS, PLAYER_RAY_LENGTH
 from src.geometry import Vector2D
@@ -36,6 +39,8 @@ class PygameRenderEngine(RenderEngine):
         self._draw_tick(state)
         pygame.display.flip()
         self.clock.tick(5)
+        self._listen_events()
+        time.sleep(0.1)
 
     def _setup_screen(self, state: GameState):
         width = state.map.width * self.CELL_SIZE
@@ -68,16 +73,16 @@ class PygameRenderEngine(RenderEngine):
 
     def _draw_agents(self, state: GameState):
         for agent in state.agents.values():
-            agent_map_data = state.agent_map_data(agent.player_id)
-            x, y = agent_map_data.position.x, agent_map_data.position.y
+            agent_data = state.agent_data(agent.player_id)
+            x, y = agent_data["position"]["x"], agent_data["position"]["y"]
             pixel_x = int(x * self.CELL_SIZE + self.CELL_SIZE / 2)
             pixel_y = int(y * self.CELL_SIZE + self.CELL_SIZE / 2)
 
-            if not agent.is_alive:
+            if not agent_data["is_alive"]:
                 color = self.COLORS["dead"]
             else:
                 color = self.COLORS.get(
-                    f"team_{agent_map_data.team.lower()}", (255, 0, 0)
+                    f"team_{agent_data['team'].lower()}", (255, 0, 0)
                 )
 
             pygame.draw.circle(
@@ -86,12 +91,13 @@ class PygameRenderEngine(RenderEngine):
 
     def _draw_rays(self, state: GameState):
         for player_id, agent in state.agents.items():
-            if not agent.is_alive or player_id not in state.rays:
+            agent_data = state.agent_data(agent.player_id)
+
+            if not agent_data["is_alive"] or player_id not in state.rays:
                 continue
 
-            agent_map_data = state.agent_map_data(agent.player_id)
-            origin = agent_map_data.position
-            direction = agent_map_data.direction
+            origin = Vector2D(**agent_data["position"])
+            direction = Vector2D(**agent_data["direction"])
             if direction is None:
                 continue
 
@@ -128,5 +134,12 @@ class PygameRenderEngine(RenderEngine):
         self.screen.blit(tick_text, (5, state.map.height * self.CELL_SIZE + 5))
 
     @classmethod
+    def _listen_events(self):
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                raise StopSimulationException()
+
+    @classmethod
     def quit(cls):
+        pygame.display.quit()
         pygame.quit()

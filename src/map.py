@@ -17,7 +17,7 @@ class PlayerMapData(BaseModel):
     direction: Vector2D | None = None
 
     def _compute_default_direction(self, target: Vector2D):
-        dir_vec = (self.position - target).versor()
+        dir_vec = (target - self.position).versor()
         dir_vec = closest_vec_multiple_angle(dir_vec, PLAYER_ROTATE_DEGREES)
         self.direction = dir_vec
 
@@ -78,3 +78,20 @@ class GameMap(BaseModel):
                     )
                     player._compute_default_direction(center)
                     self.players[player_id] = player
+
+    def _point_inside_grid(self, x: int | float, y: int | float) -> bool:
+        return 0 <= x < self.width and 0 <= y < self.height
+
+    def nearest_walls(self, point: Vector2D) -> list[Vector2D]:
+        point_x, point_y = int(point.x), int(point.y)
+        walls = []
+        for dx in [-1, 0, 1]:
+            for dy in [-1, 0, 1]:
+                other_x = point_x + dx
+                other_y = point_y + dy
+                if not self._point_inside_grid(other_x, other_y):
+                    continue
+                other = self.grid[other_y][other_x]
+                if other == "#":
+                    walls.append(Vector2D(x=other_x, y=other_y))
+        return walls
