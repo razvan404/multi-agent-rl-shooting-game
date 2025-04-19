@@ -10,7 +10,7 @@ from .percept import PlayerPercept
 
 
 class PlayerAgent(Agent, ABC):
-    map_data: PlayerMapData
+    player_id: str
     shooting_delay: int = 0  # ticks
     is_alive: bool = True
     last_actions: deque[Action] = deque(maxlen=PLAYER_LAST_ACTIONS_LEN)
