@@ -20,7 +20,7 @@ class TurnRightAction(PlayerAction):
 
 
 class ShootAction(PlayerAction):
-    angle: float
+    angle: float = 0
 
 
 class WaitAction(PlayerAction):
