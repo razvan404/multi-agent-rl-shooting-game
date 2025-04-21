@@ -10,3 +10,9 @@ class State(BaseModel, ABC):
     However, there should be methods for updating and retrieving various
     aspects of the state.
     """
+
+    def step(self):
+        """
+        Advances the state by one step.
+        """
+        return

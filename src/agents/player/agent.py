@@ -26,5 +26,8 @@ class PlayerAgent(Agent, ABC):
         self.last_actions.append(action)
         return action
 
+    def _select_raw_action(self) -> PlayerAction:
+        return WaitAction()
+
     def select_action(self) -> PlayerAction:
-        return self._choose_action(WaitAction())
+        return self._choose_action(self._select_raw_action())

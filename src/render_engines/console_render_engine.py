@@ -17,7 +17,7 @@ class ConsoleRenderEngine(RenderEngine):
             grid[y][x] = self.SYMBOLS["wall"]
 
         # Place agents
-        for agent in state.agents.values():
+        for agent, agent_data in state.map.players.items():
             agent_data = agent.map_data
             x, y = agent_data.position
             if not agent.is_alive:

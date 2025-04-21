@@ -10,3 +10,10 @@ class RenderEngine(ABC):
         text-based output, or could update a graphical display.
         """
         pass
+
+    def stop(self):
+        """
+        Stops the render engine. This may be as simple as closing a window,
+        or could involve more complex cleanup.
+        """
+        pass

@@ -78,6 +78,7 @@ class GameMap(BaseModel):
                     )
                     player._compute_default_direction(center)
                     self.players[player_id] = player
+                    self.grid[y][x] = "."
 
     def _point_inside_grid(self, x: int | float, y: int | float) -> bool:
         return 0 <= x < self.width and 0 <= y < self.height

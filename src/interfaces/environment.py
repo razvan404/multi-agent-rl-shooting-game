@@ -24,9 +24,15 @@ class Environment(BaseModel, ABC):
         pass
 
     @abstractmethod
-    def update_state(self, agent: Agent, action: Action) -> State:
+    def update_state(self, agent: Agent, action: Action) -> None:
         """
         Executes an agent's action and update the environment's state. This
         implements the env: S x A -> S function.
         """
         pass
+
+    def step(self) -> None:
+        """
+        Advances the environment by one step.
+        """
+        return
