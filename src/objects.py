@@ -1,5 +1,7 @@
 from enum import IntEnum
 
+from pydantic import BaseModel
+
 from src.geometry import Vector2D
 
 
@@ -33,3 +35,9 @@ class CollisionDetector:
 
         closest_point = Vector2D(x=dx, y=dy)
         return (player - closest_point).length() < PLAYER_DIAMETER / 2
+
+
+class Ray(BaseModel):
+    distance: float  # [0, 1]
+    obj: GameObject
+    direction: Vector2D

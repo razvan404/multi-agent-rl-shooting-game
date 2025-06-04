@@ -1,6 +1,5 @@
 from pydantic import BaseModel
 
-from .agents.player import Ray
 from .constants import (
     PLAYER_VIEW_FOV,
     PLAYER_NUM_RAYS,
@@ -12,7 +11,7 @@ from .constants import (
 from .geometry import Vector2D
 from .interfaces import State
 from .map import GameMap, PlayerID, PlayerMapData
-from .objects import GameObject, CollisionDetector
+from .objects import GameObject, CollisionDetector, Ray
 
 
 class AgentStats(BaseModel):
@@ -70,6 +69,10 @@ class GameState(State):
     def _cast_single_ray(
         self, origin: Vector2D, direction: Vector2D, player_data: PlayerMapData
     ) -> Ray:
+        ray_direction = Vector2D.from_angle(
+            direction.base_angle() - player_data.direction.base_angle()
+        )
+
         for step in range(1, RAY_TRACER_STEPS + 1):
             t = (step / RAY_TRACER_STEPS) * PLAYER_RAY_LENGTH
             point = origin + direction * t
@@ -79,10 +82,10 @@ class GameState(State):
                 return Ray(
                     distance=t / PLAYER_RAY_LENGTH,
                     obj=obj,
-                    angle=direction.base_angle(),
+                    direction=ray_direction,
                 )
 
-        return Ray(distance=1.0, obj=GameObject.NONE, angle=direction.base_angle())
+        return Ray(distance=1.0, obj=GameObject.NONE, direction=ray_direction)
 
     def _check_collision(
         self, point: Vector2D, player_data: PlayerMapData
@@ -146,7 +149,7 @@ class GameState(State):
                     point, other_stats.map_data.position
                 ):
                     other_stats.is_alive = False
-                    self.shooter_id.kills.append(other_id)
+                    self.agent_stats[shooter_id].kills.append(other_id)
                     return True
 
             for wall in self.map.nearest_walls(point):

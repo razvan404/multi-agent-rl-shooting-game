@@ -5,6 +5,7 @@ from src.actions import (
     ForwardAction,
     TurnLeftAction,
     ShootAction,
+    TurnRightAction,
 )
 from src.constants import PLAYER_NUM_RAYS
 from src.objects import GameObject
@@ -13,30 +14,34 @@ from ..player import PlayerAgent
 
 
 class DummyPlayerAgent(PlayerAgent):
-    def _select_raw_action(self) -> PlayerAction:
-        wall_hits = []
-        enemy_hits = []
-        for ray in range(PLAYER_NUM_RAYS):
-            if self.current_percept.rays[ray].obj == GameObject.WALL:
-                wall_hits.append(self.current_percept.rays[ray])
-            elif self.current_percept.rays[ray].obj == GameObject.ENEMY:
-                enemy_hits.append(self.current_percept.rays[ray])
-        if any(
+    def _check_wall(self):
+        if random.random() < 0.75 and any(
             [
-                self.current_percept.rays[ray].obj == GameObject.WALL
-                and self.current_percept.rays[ray].distance < 0.3
-                for ray in range(PLAYER_NUM_RAYS)
+                ray.obj == GameObject.WALL and ray.distance < 0.2
+                for ray in self.current_percept.rays
             ]
         ):
             return TurnLeftAction()
+        return None
 
-        if any(
-            [
-                self.current_percept.rays[ray].obj == GameObject.ENEMY
-                for ray in range(PLAYER_NUM_RAYS // 2 - 4, PLAYER_NUM_RAYS // 2 + 5)
-            ]
-        ):
-            return ShootAction()
+    def _check_enemy(self):
+        for ray_idx, ray in enumerate(self.current_percept.rays):
+            if ray.obj != GameObject.ENEMY:
+                continue
+            elif ray_idx <= PLAYER_NUM_RAYS // 2 - 5:
+                return TurnLeftAction()
+            elif ray_idx >= PLAYER_NUM_RAYS // 2 + 5:
+                return TurnRightAction()
+            else:
+                return ShootAction(angle=ray.direction.base_angle())
+        return None
+
+    def _select_raw_action(self) -> PlayerAction:
+        if action := self._check_enemy():
+            return action
+
+        if action := self._check_wall():
+            return action
 
         p = random.random()
         if p < 0.85:

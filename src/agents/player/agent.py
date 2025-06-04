@@ -3,15 +3,17 @@ from collections import deque
 
 from src.actions import PlayerAction, WaitAction
 from src.constants import PLAYER_LAST_ACTIONS_LEN
-from src.interfaces import Agent
 
+from ..communication_agent import CommunicationAgent
 from .percept import PlayerPercept
+from ...geometry import Vector2D
 
 
-class PlayerAgent(Agent, ABC):
+class PlayerAgent(CommunicationAgent, ABC):
     player_id: str
     last_actions: deque[PlayerAction] = deque(maxlen=PLAYER_LAST_ACTIONS_LEN)
     current_percept: PlayerPercept | None = None
+    current_message: Vector2D | None = None
 
     def init(self, **kwargs):
         super().__init__(**kwargs)
@@ -20,6 +22,10 @@ class PlayerAgent(Agent, ABC):
 
     def see(self, percept: PlayerPercept):
         self.current_percept = percept
+        message = self.blackboard.read(self.player_id)
+        if message is not None:
+            print(f"[AGENT {self.player_id}]: Received message: {message}")
+            self.current_message = message
 
     def _choose_action(self, action: PlayerAction) -> PlayerAction:
         self.current_percept = None

@@ -1,4 +1,4 @@
 from .agent import PlayerAgent
-from .percept import PlayerPercept, Ray
+from .percept import PlayerPercept
 
-__all__ = ["PlayerAgent", "PlayerPercept", "Ray"]
+__all__ = ["PlayerAgent", "PlayerPercept"]

@@ -25,18 +25,22 @@ class PygameRenderEngine(RenderEngine):
         "dead": (100, 100, 100),
         "team_r": (255, 0, 0),
         "team_y": (255, 200, 0),
+        "team_g": (0, 255, 120),
+        "team_b": (0, 120, 255),
         "ray_wall": (0, 0, 255),
         "ray_agent": (255, 0, 255),
         "ray_none": (0, 255, 0),
         "shoot_ray": (255, 50, 50),
     }
 
-    def __init__(self):
+    def __init__(self, sleep_between_simulations: float = 0.05):
         pygame.init()
         self.screen = None
         self.clock = pygame.time.Clock()
         self.font = pygame.font.SysFont(None, 24)
         self.paused = False
+        self.clock_tick = 100
+        self.sleep_between_simulations = sleep_between_simulations
 
     def display(self, state: GameState):
         self._setup_screen(state)
@@ -47,14 +51,14 @@ class PygameRenderEngine(RenderEngine):
         self._draw_tick(state)
         self._draw_shots(state)
         pygame.display.flip()
-        self.clock.tick(5)
+        self.clock.tick(self.clock_tick)
         self._listen_events()
 
         while self.paused:
             self._listen_events()
-            self.clock.tick(10)
+            self.clock.tick(5)
 
-        time.sleep(0.05)
+        time.sleep(self.sleep_between_simulations)
 
     def _setup_screen(self, state: GameState):
         width = state.map.width * self.CELL_SIZE
@@ -148,7 +152,6 @@ class PygameRenderEngine(RenderEngine):
                 )
 
     def _draw_shots(self, state: GameState):
-        print(state.pending_shots)
         for shot in state.pending_shots:
             origin = shot.origin
             direction = shot.direction
@@ -178,6 +181,6 @@ class PygameRenderEngine(RenderEngine):
         self.paused = True
         while self.paused:
             self._listen_events()
-            self.clock.tick(10)
+            self.clock.tick(50)
         pygame.display.quit()
         pygame.quit()

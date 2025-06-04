@@ -1,3 +1,5 @@
+import multiprocessing
+import threading
 from abc import ABC, abstractmethod
 
 from pydantic import BaseModel, ConfigDict
@@ -8,6 +10,17 @@ from src.interfaces.environment import Environment
 from src.interfaces.render_engine import RenderEngine
 
 from .exceptions import StopSimulationException
+
+
+def agent_step(agent, env, results):
+    percept = env.get_percept(agent)
+    agent.see(percept)
+    action = agent.select_action()
+    results.append((agent, action))
+
+
+def update_state_step(env, agent, action):
+    env.update_state(agent, action)
 
 
 class BaseSimulation(BaseModel, ABC):
@@ -23,19 +36,26 @@ class BaseSimulation(BaseModel, ABC):
     render_engine: RenderEngine
 
     def simulation_step(self, pending_actions: list[tuple[Agent, Action]]):
-        agents_actions = pending_actions
-        pending_actions: list[tuple[Agent, Action]] = []
-
+        threads = []
+        results = []
         for agent in self.agents:
-            percept = self.env.get_percept(agent)
-            agent.see(percept)
-            action = agent.select_action()
-            agents_actions.append((agent, action))
+            thread = threading.Thread(
+                target=agent_step, args=(agent, self.env, results)
+            )
+            thread.start()
+            threads.append(thread)
+        for thread in threads:
+            thread.join()
 
-        for agent, action in agents_actions:
-            self.env.update_state(agent, action)
-            # if False:
-            #     pending_actions.append((agent, action))
+        threads = []
+        for agent, action in results:
+            thread = threading.Thread(
+                target=update_state_step, args=(self.env, agent, action)
+            )
+            thread.start()
+            threads.append(thread)
+        for thread in threads:
+            thread.join()
 
         self.env.step()
         self.render_engine.display(self.env.state)

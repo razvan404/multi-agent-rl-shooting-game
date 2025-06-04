@@ -6,7 +6,14 @@ class GameSimulation(BaseSimulation):
     env: GameEnvironment
 
     def is_complete(self) -> bool:
-        num_alive_agents = 0
+        if self.env.state.tick >= 500:
+            return True
+
+        alive_teams = set()
         for agent_stats in self.env.state.agent_stats.values():
-            num_alive_agents += 1 if agent_stats.is_alive else 0
-        return num_alive_agents <= 1
+            if not agent_stats.is_alive or agent_stats.map_data.team in alive_teams:
+                continue
+            if len(alive_teams) >= 1:
+                return False
+            alive_teams.add(agent_stats.map_data.team)
+        return True
