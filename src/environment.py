@@ -11,9 +11,8 @@ class GameEnvironment(Environment):
 
     def get_percept(self, agent: Agent) -> Percept:
         if isinstance(agent, PlayerAgent):
-            rays = self.state.rays[agent.player_id]
-            direction = Vector2D(**self.state.agent_data(agent.player_id)["direction"])
-            return PlayerPercept(rays=rays, direction=direction)
+            stats = self.state.agent_stats[agent.player_id]
+            return PlayerPercept(rays=stats.rays)
         raise ValueError("Unsupported agent type")
 
     def update_state(self, agent: Agent, action: Action) -> None:

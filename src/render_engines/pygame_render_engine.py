@@ -92,33 +92,31 @@ class PygameRenderEngine(RenderEngine):
 
     def _draw_agents(self, state: GameState):
         for player_id in state.agent_stats.keys():
-            agent_data = state.agent_data(player_id)
+            agent_stats = state.agent_stats[player_id]
 
-            if not agent_data["is_alive"]:
+            if not agent_stats.is_alive:
                 color = self.COLORS["dead"]
             else:
                 color = self.COLORS.get(
-                    f"team_{agent_data['team'].lower()}", (255, 0, 0)
+                    f"team_{agent_stats.map_data.team.lower()}", (255, 0, 0)
                 )
 
             pygame.draw.circle(
                 self.screen,
                 color,
                 self._coord_to_px(
-                    agent_data["position"]["x"], agent_data["position"]["y"]
+                    agent_stats.map_data.position.x, agent_stats.map_data.position.y
                 ),
                 (self.CELL_SIZE * PLAYER_DIAMETER) // 2,
             )
 
     def _draw_rays(self, state: GameState):
-        for player_id in state.agent_stats.keys():
-            agent_data = state.agent_data(player_id)
-
-            if not agent_data["is_alive"] or player_id not in state.rays:
+        for player_id, agent_stats in state.agent_stats.items():
+            if not agent_stats.is_alive or len(agent_stats.rays) == 0:
                 continue
 
-            origin = Vector2D(**agent_data["position"])
-            direction = Vector2D(**agent_data["direction"])
+            origin = agent_stats.map_data.position
+            direction = agent_stats.map_data.direction
             if direction is None:
                 continue
 
@@ -126,7 +124,7 @@ class PygameRenderEngine(RenderEngine):
             start_angle = base_angle - (PLAYER_VIEW_FOV / 2)
             angle_step = PLAYER_VIEW_FOV / (PLAYER_NUM_RAYS - 1)
 
-            for i, ray in enumerate(state.rays[player_id]):
+            for i, ray in enumerate(agent_stats.rays):
                 angle = start_angle + i * angle_step
                 dx = math.cos(math.radians(angle))
                 dy = math.sin(math.radians(angle))

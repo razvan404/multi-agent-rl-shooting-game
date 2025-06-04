@@ -18,6 +18,9 @@ from .objects import GameObject, CollisionDetector
 class AgentStats(BaseModel):
     is_alive: bool = True
     shooting_delay: int = 0  # ticks
+    kills: list[str] = []
+    map_data: PlayerMapData
+    rays: list[Ray]
 
 
 class PendingShot(BaseModel):
@@ -31,26 +34,18 @@ class GameState(State):
     tick: int = 0
     map: GameMap
     agent_stats: dict[PlayerID, AgentStats] = {}
-    rays: dict[PlayerID, list[Ray]] = {}
     pending_shots: list[PendingShot] = []
-    kills: dict[PlayerID, list[PlayerID]] = {}
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.agent_stats = kwargs.get(
             "agent_stats",
-            {player_id: AgentStats() for player_id in self.map.players.keys()},
-        )
-        self.rays = kwargs.get(
-            "rays",
             {
-                player_id: self._compute_rays_for_agent(player_data)
-                for player_id, player_data in self.map.players.items()
+                player_id: AgentStats(
+                    map_data=map_data, rays=self._compute_rays_for_agent(map_data)
+                )
+                for player_id, map_data in self.map.players.items()
             },
-        )
-        self.kills = kwargs.get(
-            "kills",
-            {player_id: [] for player_id in self.map.players.keys()},
         )
 
     def _compute_rays_for_agent(self, player_data: PlayerMapData) -> list[Ray]:
@@ -96,28 +91,22 @@ class GameState(State):
             if CollisionDetector.check_collision_point_wall(point, wall):
                 return GameObject.WALL
 
-        for other_id, other_data in self.map.players.items():
+        for other_id, other_stats in self.agent_stats.items():
             if (
                 other_id == player_data.player_id
                 or not self.agent_stats[other_id].is_alive
             ):
                 continue
             if CollisionDetector.check_collision_point_player(
-                point, other_data.position
+                point, other_stats.map_data.position
             ):
                 return (
                     GameObject.TEAMMATE
-                    if other_data.team == player_data.team
+                    if other_stats.map_data.team == player_data.team
                     else GameObject.ENEMY
                 )
 
         return GameObject.NONE
-
-    def agent_data(self, agent_id: str) -> dict:
-        return {
-            **self.map.players[agent_id].model_dump(),
-            **self.agent_stats[agent_id].model_dump(),
-        }
 
     def _compute_updated_bullets(self):
         updated_shots = []
@@ -147,18 +136,17 @@ class GameState(State):
             t = step / RAY_TRACER_STEPS
             point = origin + (end - origin) * t
 
-            for other_id, other_data in self.map.players.items():
+            for other_id, other_stats in self.agent_stats.items():
                 if other_id == shooter_id:
                     continue
-                other_stats = self.agent_stats[other_id]
                 if not other_stats.is_alive:
                     continue
 
                 if CollisionDetector.check_collision_point_player(
-                    point, other_data.position
+                    point, other_stats.map_data.position
                 ):
                     other_stats.is_alive = False
-                    self.kills[shooter_id].append(other_id)
+                    self.shooter_id.kills.append(other_id)
                     return True
 
             for wall in self.map.nearest_walls(point):
@@ -169,9 +157,9 @@ class GameState(State):
 
     def step(self):
         self.pending_shots = self._compute_updated_bullets()
-        for player_id, player_data in self.map.players.items():
+        for player_id, player_stats in self.agent_stats.items():
             stats = self.agent_stats[player_id]
             if stats.shooting_delay > 0:
                 stats.shooting_delay -= 1
-            self.rays[player_id] = self._compute_rays_for_agent(player_data)
+            player_stats.rays = self._compute_rays_for_agent(player_stats.map_data)
         self.tick += 1

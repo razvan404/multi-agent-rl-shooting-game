@@ -22,8 +22,9 @@ class BaseSimulation(BaseModel, ABC):
     env: Environment
     render_engine: RenderEngine
 
-    def simulation_step(self):
-        agents_actions: list[tuple[Agent, Action]] = []
+    def simulation_step(self, pending_actions: list[tuple[Agent, Action]]):
+        agents_actions = pending_actions
+        pending_actions: list[tuple[Agent, Action]] = []
 
         for agent in self.agents:
             percept = self.env.get_percept(agent)
@@ -33,9 +34,12 @@ class BaseSimulation(BaseModel, ABC):
 
         for agent, action in agents_actions:
             self.env.update_state(agent, action)
+            # if False:
+            #     pending_actions.append((agent, action))
 
         self.env.step()
         self.render_engine.display(self.env.state)
+        return pending_actions
 
     def start(self):
         """
@@ -44,10 +48,11 @@ class BaseSimulation(BaseModel, ABC):
         allow the agent to decide when it will sense and act.
         """
         self.render_engine.display(self.env.state)
+        pending_actions: list[tuple[Agent, Action]] = []
 
         try:
             while not self.is_complete():
-                self.simulation_step()
+                pending_actions = self.simulation_step(pending_actions)
             self.render_engine.stop()
         except StopSimulationException:
             pass

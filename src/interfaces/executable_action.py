@@ -7,6 +7,9 @@ from src.interfaces.action import Action
 
 
 class ExecutableAction(ABC):
+    def __init__(self, action: Action):
+        self.action = action
+
     @abstractmethod
     def execute(self, agent: Agent, state: State) -> State:
         """
@@ -16,7 +19,3 @@ class ExecutableAction(ABC):
         important to know which agent is executing the action.
         """
         pass
-
-    @classmethod
-    def from_action(cls, _: Action) -> "ExecutableAction":
-        return cls()

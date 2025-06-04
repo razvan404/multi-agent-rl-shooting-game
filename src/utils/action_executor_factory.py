@@ -12,4 +12,4 @@ class ActionExecutorFactory:
     @classmethod
     def get_executor(cls, action: Action) -> ExecutableAction:
         executor_cls = cls._executors[type(action)]
-        return executor_cls.from_action(action)
+        return executor_cls(action)

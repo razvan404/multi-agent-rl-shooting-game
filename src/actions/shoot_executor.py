@@ -9,25 +9,17 @@ from ..utils import ActionExecutorFactory
 
 
 class ShootExecutor(ExecutableAction):
-    def __init__(self, angle: float):
-        self.angle = angle
-
-    @classmethod
-    def from_action(cls, action: ShootAction):
-        return cls(angle=action.angle)
-
     def execute(self, agent: PlayerAgent, state: GameState) -> GameState:
         stats = state.agent_stats[agent.player_id]
         if not stats.is_alive or stats.shooting_delay > 0:
             return state
 
-        player_data = state.map.players[agent.player_id]
-        origin = player_data.position
-        if not player_data.direction:
+        origin = stats.map_data.position
+        if not stats.map_data.direction:
             return state
 
-        base_angle = player_data.direction.base_angle()
-        shot_angle = base_angle + self.angle
+        base_angle = stats.map_data.direction.base_angle()
+        shot_angle = base_angle + self.action.angle
         direction = Vector2D.from_angle(shot_angle)
 
         state.pending_shots.append(

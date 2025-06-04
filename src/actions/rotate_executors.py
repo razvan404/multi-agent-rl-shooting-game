@@ -13,11 +13,11 @@ class TurnLeftExecutor(ExecutableAction):
         return self._rotate(agent, state, -PLAYER_ROTATE_DEGREES)
 
     def _rotate(self, agent: PlayerAgent, state: GameState, angle: float):
-        player_data = state.map.players[agent.player_id]
-        if player_data.direction:
-            current_angle = player_data.direction.base_angle()
+        player_stats = state.agent_stats[agent.player_id]
+        if player_stats.map_data.direction:
+            current_angle = player_stats.map_data.direction.base_angle()
             new_angle = current_angle + angle
-            player_data.direction = closest_vec_multiple_angle(
+            player_stats.map_data.direction = closest_vec_multiple_angle(
                 Vector2D.from_angle(new_angle), PLAYER_ROTATE_DEGREES
             )
         return state
