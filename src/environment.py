@@ -1,8 +1,6 @@
 from .actions import PlayerAction
-from .agents.moderator.agent import ModeratorAgent
-from .agents.moderator.percept import ModeratorPercept
+from .agents.moderator import ModeratorAgent, ModeratorPercept
 from .agents.player import PlayerAgent, PlayerPercept
-from .geometry import Vector2D
 from .interfaces import Environment, Agent, Action, Percept
 from .state import GameState
 from .utils import ActionExecutorFactory

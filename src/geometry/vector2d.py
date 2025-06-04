@@ -35,3 +35,12 @@ class Vector2D(BaseModel):
 
     def base_angle(self) -> float:
         return math.degrees(math.atan2(self.y, self.x))
+
+    def rotate(self, angle_deg: float) -> "Vector2D":
+        radians = math.radians(angle_deg)
+        cos_a = math.cos(radians)
+        sin_a = math.sin(radians)
+        return Vector2D(
+            x=self.x * cos_a + self.y * sin_a,
+            y=-self.x * sin_a + self.y * cos_a,
+        )

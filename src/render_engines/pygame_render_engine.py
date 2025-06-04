@@ -33,13 +33,13 @@ class PygameRenderEngine(RenderEngine):
         "shoot_ray": (255, 50, 50),
     }
 
-    def __init__(self, sleep_between_simulations: float = 0.05):
+    def __init__(self, clock_tick: int = 50, sleep_between_simulations: float = 0.05):
         pygame.init()
         self.screen = None
         self.clock = pygame.time.Clock()
         self.font = pygame.font.SysFont(None, 24)
         self.paused = False
-        self.clock_tick = 100
+        self.clock_tick = clock_tick
         self.sleep_between_simulations = sleep_between_simulations
 
     def display(self, state: GameState):

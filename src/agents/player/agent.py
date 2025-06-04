@@ -2,11 +2,11 @@ from abc import ABC
 from collections import deque
 
 from src.actions import PlayerAction, WaitAction
-from src.constants import PLAYER_LAST_ACTIONS_LEN
+from src.constants import PLAYER_LAST_ACTIONS_LEN, VERBOSE
+from src.geometry import Vector2D
 
-from ..communication_agent import CommunicationAgent
 from .percept import PlayerPercept
-from ...geometry import Vector2D
+from ..communication_agent import CommunicationAgent
 
 
 class PlayerAgent(CommunicationAgent, ABC):
@@ -24,7 +24,8 @@ class PlayerAgent(CommunicationAgent, ABC):
         self.current_percept = percept
         message = self.blackboard.read(self.player_id)
         if message is not None:
-            print(f"[AGENT {self.player_id}]: Received message: {message}")
+            if VERBOSE:
+                print(f"[AGENT {self.player_id}]: Received message: {message}")
             self.current_message = message
 
     def _choose_action(self, action: PlayerAction) -> PlayerAction:

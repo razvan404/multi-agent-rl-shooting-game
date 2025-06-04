@@ -15,7 +15,7 @@ from ..player import PlayerAgent
 
 class DummyPlayerAgent(PlayerAgent):
     def _check_wall(self):
-        if random.random() < 0.75 and any(
+        if random.random() < 0.7 and any(
             [
                 ray.obj == GameObject.WALL and ray.distance < 0.2
                 for ray in self.current_percept.rays

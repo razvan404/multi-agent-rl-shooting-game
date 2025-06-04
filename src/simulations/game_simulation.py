@@ -4,9 +4,10 @@ from src.environment import GameEnvironment
 
 class GameSimulation(BaseSimulation):
     env: GameEnvironment
+    max_simulations: int = 500
 
     def is_complete(self) -> bool:
-        if self.env.state.tick >= 500:
+        if self.env.state.tick >= self.max_simulations:
             return True
 
         alive_teams = set()
